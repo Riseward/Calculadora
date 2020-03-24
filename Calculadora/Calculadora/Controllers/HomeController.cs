@@ -7,7 +7,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Calculadora.Models;
 
-namespace Calculadora.Controllers{
+namespace Calculadora.Controllers
+{
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
@@ -17,15 +18,36 @@ namespace Calculadora.Controllers{
             _logger = logger;
         }
 
+
+
+        /// <summary>
+        /// apresentação inicial da view no browser
+        /// </summary>
+        /// <returns>View</returns>
         public IActionResult Index()
         {
+
+            // inicializar o valor do Visor
+            ViewBag.Visor = "0";
+
             return View();
         }
 
+
+        /// <summary>
+        /// apresentação da 'vista' da calculadora, qd a interação é efetuada em modo 'HTTP POST'
+        /// </summary>
+        /// <param name="visor">representação do operando a utilizar na operação, bem como a resposta após a execução da operação</param>
+        /// <param name="bt">valor do botão que foi premido</param>
+        /// <param name="operando">valor do primeiro operando a usar na operação</param>
+        /// <param name="operador">símbolo da operação a ser executada</param>
+        /// <param name="limpaVisor">identifica se o visor deve ser limpo, ou não</param>
+        /// <returns>View</returns>
         [HttpPost]
-        public IActionResult Index(string visor, string bt, string operando, string operador, bool limparVisor)
+        public IActionResult Index(string visor, string bt, string operando, string operador, bool limpaVisor)
         {
-            // identificar o valor da variável "bt"
+
+            // selecionar o valor do 'bt' e atuar em conformidade com o seu significado
             switch (bt)
             {
                 case "1":
@@ -38,25 +60,20 @@ namespace Calculadora.Controllers{
                 case "8":
                 case "9":
                 case "0":
-                    if (visor == "0" || limparVisor) visor = bt;
-                    else visor += bt; //visor = visor + bt;
-
-                    // impedir o visor de ser limpo
-                    limparVisor = false;
-
+                    if (visor == "0" || limpaVisor) visor = bt;
+                    else visor += bt; // visor = visor + bt
+                                      // marcar o visor para NÃO ser limpo
+                    limpaVisor = false;
                     break;
 
                 case "+/-":
-                    // inverter o valor do visor
-                    // pode ser feito de duas formas:
-                    //  - multiplicar por -1 -> converter o valor para numero
-                    //  - processar a string: visor.StartsWith().ToString().Substring().Length
                     visor = Convert.ToDouble(visor) * -1 + "";
-
+                    // como o 'visor' é uma string, a inversão poderia ser feita por manipulação de strings
+                    // precisaríamos dos métodos .StartsWith(). , .Substring() e da propriedade  .Length
                     break;
 
                 case ",":
-                    if (!visor.Contains(",")) visor += bt;
+                    if (!visor.Contains(bt)) visor += bt;
                     break;
 
                 case "+":
@@ -64,64 +81,65 @@ namespace Calculadora.Controllers{
                 case ":":
                 case "x":
                 case "=":
-
-                    //primeira vez que um operador foi selecionado
+                    // como guardar os dados do 'visor' para ter 'memória'?
+                    // não é a primeira vez que escolho um operador?
                     if (operador != null)
                     {
-
-                        // executar a operação
-                        // variaveis auxiliares
-                        double operando1 = Convert.ToDouble(operando);
-                        double operando2 = Convert.ToDouble(visor);
-
+                        // carreguei + do q uma vez num 'operador'
+                        double primeiroOperando = Convert.ToDouble(operando);
+                        double segundoOperando = Convert.ToDouble(visor);
                         switch (operador)
                         {
                             case "+":
-                                visor = operando1 + operando2 + "";
+                                visor = primeiroOperando + segundoOperando + "";
                                 break;
                             case "-":
-                                visor = operando1 - operando2 + "";
-                                break;
-                            case "x":
-                                visor = operando1 * operando2 + "";
+                                visor = primeiroOperando - segundoOperando + "";
                                 break;
                             case ":":
-                                visor = operando1 / operando2 + "";
+                                visor = primeiroOperando / segundoOperando + "";
                                 break;
-
-                            case "c":
-                                visor = "0";
-                                operador = "";
-                                operando = "";
-                                limparVisor = true;
+                            case "x":
+                                visor = primeiroOperando * segundoOperando + "";
                                 break;
-
                         }
-
-
                     }
-                    // guardar valores para "memoria futura"
-                    if (bt != "=") operador = bt;
-                    else operador = "";
-                    operando = visor;
-                    limparVisor = true;
-                    // guardar valores para "memoria futura"
-                    //operador = bt;
-
+                    // garantir o efeito de 'memória'
+                    if (!bt.Equals("="))
+                    {
+                        operando = visor;
+                        operador = bt;
+                    }
+                    else
+                    {
+                        // anulo o efeito de 'memória'
+                        operando = null;
+                        operador = null;
+                    }
+                    // como dar ordem ao visor para se reiniciar
+                    limpaVisor = true;
                     break;
 
-
-
+                case "C":
+                    visor = "0";
+                    operador = null;
+                    operando = null;
+                    limpaVisor = true;
+                    break;
             }
 
-            // levar o resultado do visor
+            // enviar dados do Visor para a view
             ViewBag.Visor = visor;
+            // e os outros dados, também
             ViewBag.Operador = operador;
             ViewBag.Operando = operando;
-            ViewBag.LimparVisor = limparVisor + "";
+            ViewBag.LimpaVisor = limpaVisor + "";  // bool -> string
 
             return View();
         }
+
+
+
 
         [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
         public IActionResult Error()
