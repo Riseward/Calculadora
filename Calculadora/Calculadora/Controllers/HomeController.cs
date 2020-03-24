@@ -7,8 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Calculadora.Models;
 
-namespace Calculadora.Controllers
-{
+namespace Calculadora.Controllers{
     public class HomeController : Controller
     {
         private readonly ILogger<HomeController> _logger;
